@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>نتا رو زدن؟</title>
+<style>
+body{
+    font-family:tahoma;
+    text-align:center;
+    margin-top:80px;
+    direction: rtl;
+}
+#result{
+    font-size:28px;
+    margin-top:30px;
+    font-weight: bold;
+}
+#details {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #555;
+    text-align: center;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.8;
+}
+</style>
+</head>
+<script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+</script>
+<body>
+
+<div id="result">بزار چک کنم</div>
+<div id="details"></div>
+
+<script>
+const sites = [
+ { name: "گوگل", url: "https://www.google.com/favicon.ico" },
+ { name: "ویکی‌پدیا", url: "https://www.wikipedia.org/static/apple-touch/wikipedia.png" },
+ { name: "cdnjs", url: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" },
+ { name: "npm", url: "https://registry.npmjs.org/" },
+ { name: "گیت‌هاب", url: "https://raw.githubusercontent.com/jeresig/jquery/master/package.json" }
+];
+
+const onlineTexts = [
+    "نه نزدن ✅",
+    "هنوز نزدن! ⚡",
+    "نه باو، سالمه 🕺",
+    "وصلی حاجی 🗿",
+];
+
+const offlineTexts = [
+    "زدنننننن ❌",
+    "فاتحه... 💀",
+    "😔سیمو کشیدن 🔌",
+    "بومب! تموم شد 💥",
+    "هق... رفتیم تو اینترانت 😶‍🌫️",
+    "🫤حاجی زدن",
+    "نتو زدن😔"
+];
+
+function getRandomText(textArray) {
+    const randomIndex = Math.floor(Math.random() * textArray.length);
+    return textArray[randomIndex];
+}
+
+async function fetchWithTimeout(resource, options = {}) {
+    const { timeout = 3000 } = options;
+    
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+        const response = await fetch(resource, {
+            ...options,
+            signal: controller.signal
+        });
+        clearTimeout(id);
+        return response;
+    } catch (error) {
+        clearTimeout(id);
+        throw error;
+    }
+}
+
+async function checkNet(){
+    const resultElement = document.getElementById("result");
+    const detailsElement = document.getElementById("details");
+    
+    let okCount = 0;
+
+    for (const site of sites) {
+        const siteStatus = document.createElement("div");
+        siteStatus.innerText = `🔍 در حال تست ${site.name}...`;
+        detailsElement.appendChild(siteStatus);
+
+        try {
+            await fetchWithTimeout(site.url, { mode: "no-cors", timeout: 30000 });
+            okCount++;
+            siteStatus.innerText = `🟢 ${site.name}: وصل شد`;
+            siteStatus.style.color = "green";
+        } catch (error) {
+            siteStatus.innerText = `🔴 ${site.name}: خطا در اتصال (یا تایم‌اوت)`;
+            siteStatus.style.color = "red";
+        }
+    }
+
+    if(okCount > 0){
+        resultElement.innerText = getRandomText(onlineTexts);
+    } else {
+        resultElement.innerText = getRandomText(offlineTexts);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", checkNet);
+</script>
+
+</body>
+</html>
